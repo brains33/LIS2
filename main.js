@@ -42,7 +42,7 @@ function createWindow() {
     height: 800,
     minWidth: 900,
     minHeight: 600,
-    title: "MU'UJIZA DIAGNOSTICS – LIS",
+    title: "AB DAWANAU MEDICAL LABORATORY SERVICES – LIS",
     icon: path.join(__dirname, 'icon-512.png'),
     backgroundColor: '#eef2f9',
     show: false, // show only after ready-to-show for a clean launch
@@ -121,8 +121,8 @@ function buildMenu() {
             dialog.showMessageBox(win, {
               type: 'info',
               title: "About MU'UJIZA LIS",
-              message: "MU'UJIZA DIAGNOSTICS\nLaboratory Information System",
-              detail: `Version: ${app.getVersion()}\nDeveloped by MU'UJIZA DATA\n© 2025 All rights reserved`,
+              message: "MU'UJIZA LIS\nLaboratory Information System",
+              detail: `Version: ${app.getVersion()}\nDeveloped by MU'UJIZA DATA\n© 2023-2026 All rights reserved`,
               icon: path.join(__dirname, 'icon-512.png'),
               buttons: ['OK'],
             })
@@ -139,10 +139,7 @@ app.whenReady().then(() => {
   buildMenu()
   const win = createWindow()
 
-  // ── Logout: load login.html from main process then re-focus the window.
-  // On Windows, navigating via window.location in the renderer can leave the
-  // new page's inputs unresponsive because the window loses input focus.
-  // Doing it from main + calling focus() after did-finish-load fixes this.
+  
   ipcMain.on('lis-logout', () => {
     win.loadFile(path.join(__dirname, 'login.html'))
     win.webContents.once('did-finish-load', () => {
