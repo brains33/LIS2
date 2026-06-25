@@ -1011,7 +1011,7 @@
     content.innerHTML = `
       <div style="text-align:left;">
         <canvas id="receiptBarcode" style="display:block;margin:0 auto 12px;"></canvas>
-        <h3 style="color:#1F6E43;">MU'UJIZA DIAGNOSTICS</h3>
+        <h3 style="color:#1F6E43;">AB DAWANAU</h3>
         <p>Laboratory Information System</p>
         ${paidBanner}
         <p><strong>Receipt No:</strong> ${esc(sample.receiptNo)}</p>
