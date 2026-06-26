@@ -928,10 +928,10 @@ async function renderProcessingSamples() {
     return `
       <tr>
         <td style="font-family:monospace; font-weight:600;">
-          MU-${s.id}<br>
+          A.B-${s.id}<br>
           <span style="font-size:0.7rem; color:var(--primary);">${esc(s.online_ref)}</span>
           ${s.offline_ref ? `<br><span style="font-size:0.65rem;color:var(--amber);background:var(--amber-l);border:1px solid #fde68a;padding:1px 6px;border-radius:6px;display:inline-block;margin-top:3px;" title="Offline draft — pending sync">${esc(s.offline_ref)}</span>` : ''}
-          ${s.former_offline_ref ? `<br><span style="font-size:0.65rem;color:#059669;background:#ecfdf5;border:1px solid #6ee7b7;padding:1px 6px;border-radius:6px;display:inline-block;margin-top:3px;" title="Registered offline — synced. Real ID: MU-${s.id}">✓ ${esc(s.former_offline_ref)}</span>` : ''}
+          ${s.former_offline_ref ? `<br><span style="font-size:0.65rem;color:#059669;background:#ecfdf5;border:1px solid #6ee7b7;padding:1px 6px;border-radius:6px;display:inline-block;margin-top:3px;" title="Registered offline — synced. Real ID: A.B-${s.id}">✓ ${esc(s.former_offline_ref)}</span>` : ''}
         </td>
         <td><strong>${esc(s.patient)}</strong><br><small style="color:var(--text2);">${s.age ?? '?'}y ${esc(s.gender)}</small></td>
         <td><small>${testList}</small>${progressNote}</td>
@@ -981,7 +981,7 @@ async function openResultModal(id) {
     await updateCOCEvent(sample.id, 2, true, false);
     await updateCOCEvent(sample.id, 3, false, true);
     await addAudit('Started Processing', sample.id, 'Technologist opened result entry & sample received');
-    toast(`MU-${sample.id} moved to Processing`, 'success');
+    toast(`A.B-${sample.id} moved to Processing`, 'success');
     await renderProcessingSamples();
     cocEvents = await loadCOCEvents(sample.id);
   }
@@ -1002,7 +1002,7 @@ async function openResultModal(id) {
       : (currentSample.former_offline_ref
           ? ` <span style="font-size:0.65rem;font-weight:600;color:#059669;background:#ecfdf5;border:1px solid #6ee7b7;padding:2px 8px;border-radius:20px;vertical-align:middle;" title="Was registered offline — now synced">✓ SYNCED</span>`
           : '');
-    modalTitle.innerHTML = `Results — MU-${currentSample.id} | ${esc(currentSample.patient)}${statusPill}`;
+    modalTitle.innerHTML = `Results — A.B-${currentSample.id} | ${esc(currentSample.patient)}${statusPill}`;
   }
   if (modalSubtitle) modalSubtitle.textContent = `${currentSample.age ?? '?'}y ${currentSample.gender} | ${currentSample.sample_type ?? ''} | Collected: ${currentSample.collection_date ?? ''} | ${currentSample.collection_time ?? ''}`;
   if (sampleInfo) {
@@ -2666,7 +2666,7 @@ async function sendToVerify() {
   await _cocEnsureStep(5, 'Verification', false, true,  null ).catch(() => {});
 
   await addAudit('Sent to Verify', currentSample.id, `Actionable tests complete — sent by ${techName}${rejectedNote}`);
-  toast(`MU-${currentSample.id} sent to verification ✓${rejectedNote ? ' — with rejected test(s)' : ''}`);
+  toast(`A.B-${currentSample.id} sent to verification ✓${rejectedNote ? ' — with rejected test(s)' : ''}`);
   closeModal();
   await renderProcessingSamples();
 }
@@ -2688,7 +2688,7 @@ function openRejectModal() {
   const labelEl = document.getElementById('rejectModalSampleId');
   const input = document.getElementById('rejectionReasonInput');
   if (!modal) return;
-  if (labelEl) labelEl.textContent = `MU-${currentSample.id} — ${currentSample.patient}`;
+  if (labelEl) labelEl.textContent = `A.B-${currentSample.id} — ${currentSample.patient}`;
   if (input) input.value = '';
   modal.style.display = 'flex';
   setTimeout(() => input && input.focus(), 80);
@@ -2757,7 +2757,7 @@ window.confirmReject = async function() {
       await addAudit('Sample Rejected', currentSample.id, reason);
     }
 
-    toast(`MU-${currentSample.id} rejected — ${reason}`, 'warn');
+    toast(`A.B-${currentSample.id} rejected — ${reason}`, 'warn');
     window.closeRejectModal();
     closeModal();
     await renderProcessingSamples();
@@ -2799,7 +2799,7 @@ window.openTestRejectModal = function(idx) {
         <button onclick="document.getElementById('testRejectModal').remove()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#6b7280;">✕</button>
       </div>
       <p style="font-size:0.82rem;color:#374151;margin-bottom:14px;">
-        Rejecting: <strong>${esc(test.test_name)}</strong> on sample <strong>MU-${currentSample.id}</strong><br>
+        Rejecting: <strong>${esc(test.test_name)}</strong> on sample <strong>A.B-${currentSample.id}</strong><br>
         <span style="color:#6b7280;">Other tests on this sample will continue normally.</span>
       </p>
       <label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#6b7280;display:block;margin-bottom:8px;">Rejection Reason</label>

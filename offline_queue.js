@@ -1,5 +1,5 @@
 /**
- * offline_queue.js  —  MU'UJIZA LIS · Offline Resilience (LOAD-FIXED)
+ * offline_queue.js  —  A.B DAWANAU MEDICAL LABORATORY SERVICES · Offline Resilience (LOAD-FIXED)
  * PATCHES ONLY: saveSample, updateCOCEvent, addAudit
  * DOES NOT PATCH loadSamples → original result_entry.js loadSamples runs untouched.
  */
