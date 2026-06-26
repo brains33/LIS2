@@ -1520,7 +1520,7 @@ async function generatePDF(id) {
       pdf.setTextColor(255,255,255);
       pdf.text("AB DAWANAU MEDICAL LABORATORY SERVICES", PW / 2, 7, { align: 'center' });
       pdf.setFontSize(8);
-      pdf.text('MEDICAL LABORATORY SCIENCE DEPARTMENT', PW / 2, 13, { align: 'center' });
+      pdf.text('MARKET STREET, 3RD AVENUE, GWARINPA  |  Phone No. 08160040909', PW / 2, 13, { align: 'center' });
       // Niger State logo left side
       pdf.setFillColor(0, 153, 204);
       pdf.rect(2, 1, 16, 18, 'F');
@@ -1817,7 +1817,7 @@ async function generatePDF(id) {
       pdf.setTextColor(255,255,255);
       pdf.text("MU'UJIZA LIS", PW / 2, 7, { align: 'center' });
       pdf.setFontSize(8);
-      pdf.text('MEDICAL LABORATORY SCIENCE DEPARTMENT', PW / 2, 13, { align: 'center' });
+      pdf.text('MARKET STREET, 3RD AVENUE, GWARINPA  |  Phone No. 08160040909', PW / 2, 13, { align: 'center' });
     }
   }); // end autoTable
   } // end if tableBody.length > 0

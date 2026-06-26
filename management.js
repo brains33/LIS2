@@ -1852,7 +1852,7 @@ function _csvDate() {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MU'UJIZA LIS — Clinical Analytics Report</title>
+<title>A.B DAWANAU — Clinical Analytics Report</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1898,7 +1898,7 @@ function _csvDate() {
 
 <!-- ═══ COVER ═══════════════════════════════════════════════════════════ -->
 <div class="cover">
-  <div style="font-size:.75rem;opacity:.6;margin-bottom:6px;letter-spacing:1px;">MU'UJIZA LABORATORY INFORMATION SYSTEM</div>
+  <div style="font-size:.75rem;opacity:.6;margin-bottom:6px;letter-spacing:1px;">A.B DAWANAU MEDICAL LABORATORY SERVICES</div>
   <h1>Clinical Analytics Report</h1>
   <h2>Research & Epidemiological Summary</h2>
   <div class="cover-meta">
@@ -1980,7 +1980,7 @@ ${refTableRows ? `
 </div>` : ''}
 
 <div class="footer">
-  MU'UJIZA Laboratory Information System &nbsp;·&nbsp; Generated ${exportDate} &nbsp;·&nbsp; ${exportedBy}<br>
+  A.B DAWANAU Medical Laboratory Services &nbsp;·&nbsp; Generated ${exportDate} &nbsp;·&nbsp; ${exportedBy}<br>
   <span style="font-size:.7rem;opacity:.7;">This report is generated from verified released laboratory results. For clinical use, verify individual patient records in the LIS.</span>
 </div>
 
