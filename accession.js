@@ -398,7 +398,7 @@
       if (isPaystack && total > 0) {
         if (btn) { btn.classList.remove('loading'); btn.disabled = false; }
         const patientEmail = document.getElementById('f-patient-email')?.value.trim() || (`patient${sampleId}@muujiza-lab.com`);
-        const paystackRef = `A.B-${sampleId}-${Date.now()}`;
+        const paystackRef = `AB-${sampleId}-${Date.now()}`;
         window._pendingPaystack = {
           sampleId, receiptNo: paystackRef, patient: name, priority: sampleRow.priority,
           tests: [...tempTests], totalAmount: total, paymode
@@ -637,7 +637,7 @@
     // ─────────────────────────────────────────────────────────────────────
 
     if (_settleMode === 'Paystack') {
-      const paystackRef = `A.B-${sampleId}-BAL-${Date.now()}`;
+      const paystackRef = `AB-${sampleId}-BAL-${Date.now()}`;
       const email = `patient${sampleId}@muujiza-lab.com`;
       window._pendingSettle = { sampleId, balance, total, patient };
       const handler = PaystackPop.setup({
