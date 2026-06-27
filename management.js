@@ -392,7 +392,7 @@ async function renderFinanceReport() {
 
   // Fetch directly from Supabase — financial data not in analytics cache
   let q = window._supabaseClient.from('samples')
-    .select('id, patient, collection_date, total_amount, amount_paid, balance_due, payment_status')
+    .select('id, patient, collection_date, total_amount, amount_paid, balance_due, pay_status')
     .order('collection_date', { ascending: false });
   if (start) q = q.gte('collection_date', start);
   if (end)   q = q.lte('collection_date', end);
@@ -413,8 +413,8 @@ async function renderFinanceReport() {
     daily[d].paid    += parseFloat(s.amount_paid  || 0);
     daily[d].balance += parseFloat(s.balance_due  || 0);
     daily[d].count++;
-    if (s.payment_status === 'Unpaid')  daily[d].unpaid++;
-    if (s.payment_status === 'Partial') daily[d].partial++;
+    if (s.pay_status === 'Unpaid')  daily[d].unpaid++;
+    if (s.pay_status === 'Partial') daily[d].partial++;
   });
 
   let totalRevenue = 0, totalPaid = 0, totalBalance = 0, htmlRows = '';
@@ -443,8 +443,8 @@ async function renderFinanceReport() {
   const el = document.getElementById('financeTable');
   if (el) el.innerHTML = htmlRows;
 
-  const unpaidCount  = filtered.filter(s => s.payment_status === 'Unpaid').length;
-  const partialCount = filtered.filter(s => s.payment_status === 'Partial').length;
+  const unpaidCount  = filtered.filter(s => s.pay_status === 'Unpaid').length;
+  const partialCount = filtered.filter(s => s.pay_status === 'Partial').length;
   const finStatsEl = document.getElementById('financeStats');
   if (finStatsEl) finStatsEl.innerHTML = `
     <div class="stat-card">
@@ -481,7 +481,7 @@ async function exportFinanceCSV() {
   let start = document.getElementById('financeStart')?.value;
   let end   = document.getElementById('financeEnd')?.value;
   let q = window._supabaseClient.from('samples')
-    .select('id,patient,collection_date,total_amount,amount_paid,balance_due,payment_status')
+    .select('id,patient,collection_date,total_amount,amount_paid,balance_due,pay_status')
     .order('collection_date',{ascending:false});
   if (start) q = q.gte('collection_date', start);
   if (end)   q = q.lte('collection_date', end);
@@ -495,7 +495,7 @@ async function exportFinanceCSV() {
     (s.total_amount||0).toFixed(2),
     (s.amount_paid||0).toFixed(2),
     (s.balance_due||0).toFixed(2),
-    s.payment_status || 'Unpaid'
+    s.pay_status || 'Unpaid'
   ]);
   let csv = [headers,...rows].map(r => r.map(c => `"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\n');
   let a = document.createElement('a');
