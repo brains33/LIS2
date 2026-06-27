@@ -417,12 +417,12 @@ async function renderFinanceReport() {
     if (s.payment_status === 'Partial') daily[d].partial++;
   });
 
-  let totalRevenue = 0, totalPaid = 0, totalBalance = 0, rows = '';
+  let totalRevenue = 0, totalPaid = 0, totalBalance = 0, htmlRows = '';
   for (let [date, data] of Object.entries(daily).sort((a,b) => b[0].localeCompare(a[0]))) {
     const balColour  = data.balance  > 0 ? 'color:#b91c1c; font-weight:700;' : 'color:#15803d;';
     const unpaidHint = (data.unpaid + data.partial) > 0
       ? `<small style="color:#b91c1c;font-size:0.72rem;display:block;">${data.unpaid} unpaid · ${data.partial} partial</small>` : '';
-    rows += `<tr>
+    htmlRows += `<tr>
       <td>${date}</td>
       <td>₦${data.total.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
       <td style="color:#15803d;font-weight:600;">₦${data.paid.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
@@ -431,8 +431,8 @@ async function renderFinanceReport() {
     </tr>`;
     totalRevenue += data.total; totalPaid += data.paid; totalBalance += data.balance;
   }
-  if (!rows) rows = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">No records found.</td></tr>';
-  rows += `<tr style="font-weight:700;background:#f0f7f4;">
+  if (!htmlRows) htmlRows = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">No records found.</td></tr>';
+  htmlRows += `<tr style="font-weight:700;background:#f0f7f4;">
     <td>TOTAL</td>
     <td>₦${totalRevenue.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
     <td style="color:#15803d;">₦${totalPaid.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
@@ -441,7 +441,7 @@ async function renderFinanceReport() {
   </tr>`;
 
   const el = document.getElementById('financeTable');
-  if (el) el.innerHTML = rows;
+  if (el) el.innerHTML = htmlRows;
 
   const unpaidCount  = filtered.filter(s => s.payment_status === 'Unpaid').length;
   const partialCount = filtered.filter(s => s.payment_status === 'Partial').length;
