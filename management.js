@@ -391,7 +391,7 @@ async function renderFinanceReport() {
   let end   = document.getElementById('financeEnd')?.value;
 
   // Fetch directly from Supabase — financial data not in analytics cache
-  let q = _db.from('samples')
+  let q = window._supabaseClient.from('samples')
     .select('id, patient, collection_date, total_amount, amount_paid, balance_due, payment_status')
     .order('collection_date', { ascending: false });
   if (start) q = q.gte('collection_date', start);
@@ -445,8 +445,8 @@ async function renderFinanceReport() {
 
   const unpaidCount  = filtered.filter(s => s.payment_status === 'Unpaid').length;
   const partialCount = filtered.filter(s => s.payment_status === 'Partial').length;
-  const statsEl = document.getElementById('financeStats');
-  if (statsEl) statsEl.innerHTML = `
+  const finStatsEl = document.getElementById('financeStats');
+  if (finStatsEl) finStatsEl.innerHTML = `
     <div class="stat-card">
       <div><div class="stat-label">Total Revenue</div><div class="stat-val">₦${totalRevenue.toLocaleString(undefined,{minimumFractionDigits:2})}</div></div>
       <i class="fas fa-chart-line fa-2x"></i>
@@ -480,7 +480,7 @@ function resetFinanceFilter() {
 async function exportFinanceCSV() {
   let start = document.getElementById('financeStart')?.value;
   let end   = document.getElementById('financeEnd')?.value;
-  let q = _db.from('samples')
+  let q = window._supabaseClient.from('samples')
     .select('id,patient,collection_date,total_amount,amount_paid,balance_due,payment_status')
     .order('collection_date',{ascending:false});
   if (start) q = q.gte('collection_date', start);

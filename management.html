@@ -155,7 +155,26 @@
     </div>
     <div class="audit-wrap"><table><thead><tr><th>Timestamp</th><th>User (Role)</th><th>Action</th><th>Sample</th><th>Details</th></tr></thead><tbody id="auditTableBody"><tr><td colspan="5" style="text-align:center;padding:32px;"><span class="spinner-inline"></span>Loading audit log…</td></tr></tbody></table></div>
   </div>
-</div>
+
+  <!-- Finance Tab -->
+  <div class="tab-panel" id="tab-finance">
+    <div style="display:flex; gap:16px; margin-bottom:20px; align-items:flex-end; flex-wrap:wrap;">
+      <div><label style="display:block;font-size:.75rem;color:#6b7280;margin-bottom:4px;">Start Date</label><input type="date" id="financeStart" class="filter-select" style="padding:9px 12px;font-size:.82rem;"></div>
+      <div><label style="display:block;font-size:.75rem;color:#6b7280;margin-bottom:4px;">End Date</label><input type="date" id="financeEnd" class="filter-select" style="padding:9px 12px;font-size:.82rem;"></div>
+      <button class="add-btn" onclick="renderFinanceReport()">Apply Filter</button>
+      <button class="add-btn" style="background:#4b5563;" onclick="resetFinanceFilter()">Reset</button>
+      <button class="csv-btn" onclick="exportFinanceCSV()"><i class="fas fa-download"></i> Export CSV</button>
+    </div>
+    <div class="stats" id="financeStats"></div>
+    <div class="table-wrap" style="margin-top:20px;">
+      <table>
+        <thead><tr><th>Date</th><th>Total Revenue (₦)</th><th>Paid Amount (₦)</th><th>Outstanding (₦)</th><th>Samples</th></tr></thead>
+        <tbody id="financeTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /container -->
 
 <!-- Add/Edit User Modal -->
 <div class="modal-bg" id="userModal">
@@ -173,28 +192,6 @@
 
 <script src="management.js"></script>
 <script src="global.js"></script>
-
-  <div class="tab-panel" id="tab-finance">
-    <div class="card">
-      <div class="card-header"><i class="fas fa-chart-line"></i> Financial Report</div>
-      <div class="card-body">
-        <div style="display:flex; gap:16px; margin-bottom:20px; align-items:flex-end; flex-wrap:wrap;">
-          <div class="form-group"><label class="form-label">Start Date</label><input type="date" id="financeStart" class="form-input"></div>
-          <div class="form-group"><label class="form-label">End Date</label><input type="date" id="financeEnd" class="form-input"></div>
-          <button class="btn btn-primary btn-sm" onclick="renderFinanceReport()">Apply Filter</button>
-          <button class="btn btn-secondary btn-sm" onclick="resetFinanceFilter()">Reset</button>
-          <button class="btn btn-secondary btn-sm" onclick="exportFinanceCSV()"><i class="fas fa-download"></i> Export CSV</button>
-        </div>
-        <div class="stats-row" id="financeStats"></div>
-        <div class="table-wrap" style="margin-top:20px; overflow-x:auto;">
-          <table class="data-table">
-            <thead><tr><th>Date</th><th>Total Revenue (NGN)</th><th>Paid Amount</th><th>Outstanding Balance</th><th>Samples</th></tr></thead>
-            <tbody id="financeTable"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
 
 </body>
 </html>
