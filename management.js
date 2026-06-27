@@ -279,7 +279,7 @@
       const releasedAt = s.released_at ? new Date(s.released_at).toLocaleString() : (s.status === 'Result Released' ? '—' : '—');
       let priorityClass = s.priority === 'STAT' ? 'badge-stat' : s.priority === 'Urgent' ? 'badge-urgent' : 'badge-routine';
       return `<tr>
-        <td style="font-family:monospace; font-weight:600;">MU-${s.id}</td>
+        <td style="font-family:monospace; font-weight:600;">A.B-${s.id}</td>
         <td><strong>${escHtml(s.patient)}</strong><br><small>${s.age || '?'}y</small></td>
         <td><span class="badge ${priorityClass}">${escHtml(s.priority)}</span></td>
         <td><span class="status-badge-sm ${statusClass}">${statusDisplay}</span></td>
@@ -341,7 +341,7 @@
     tbody.innerHTML = filtered.map(e => {
       const ts = e.ts ? new Date(e.ts).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' }) : '—';
       const roleTag = e.user_role ? `<span class="audit-role-tag">${escHtml(e.user_role)}</span>` : '';
-      const sampleCell = e.sample_id ? `<span class="audit-sample">MU-${escHtml(String(e.sample_id))}</span>` : '—';
+      const sampleCell = e.sample_id ? `<span class="audit-sample">A.B-${escHtml(String(e.sample_id))}</span>` : '—';
       return `<tr><td class="audit-ts">${ts}</td><td class="audit-user"><strong>${escHtml(e.user_name || '—')}</strong>${roleTag}</td><td class="audit-action">${escHtml(e.action || '—')}</td><td>${sampleCell}</td><td class="audit-details">${escHtml(e.details || '')}</td></tr>`;
     }).join('');
   }
@@ -370,6 +370,7 @@
       if (btn.dataset.tab === 'audit') loadAuditLog();
       if (btn.dataset.tab === 'tracking') renderTrackingTable();
       if (btn.dataset.tab === 'analytics') window.renderAnalytics();
+      if (btn.dataset.tab === 'finance') renderFinanceReport();
     });
   });
 
@@ -377,6 +378,131 @@
   // Tracking and audit load on-demand when their tabs are clicked
   await loadUsers();
 })();
+
+
+// ========== FINANCIAL REPORT ==========
+async function renderFinanceReport() {
+  const statsEl = document.getElementById('financeStats');
+  const tableEl = document.getElementById('financeTable');
+  if (statsEl) statsEl.innerHTML = '<p style="color:#999;">Loading...</p>';
+  if (tableEl) tableEl.innerHTML = '';
+
+  let start = document.getElementById('financeStart')?.value;
+  let end   = document.getElementById('financeEnd')?.value;
+
+  // Fetch directly from Supabase — financial data not in analytics cache
+  let q = _db.from('samples')
+    .select('id, patient, collection_date, total_amount, amount_paid, balance_due, payment_status')
+    .order('collection_date', { ascending: false });
+  if (start) q = q.gte('collection_date', start);
+  if (end)   q = q.lte('collection_date', end);
+
+  const { data: rows, error } = await q;
+  if (error) {
+    if (statsEl) statsEl.innerHTML = '<p style="color:red;">Error: ' + error.message + '</p>';
+    return;
+  }
+  const filtered = rows || [];
+
+  // Aggregate into daily buckets
+  let daily = {};
+  filtered.forEach(s => {
+    let d = (s.collection_date || 'Unknown').slice(0,10);
+    if (!daily[d]) daily[d] = { total:0, paid:0, balance:0, count:0, unpaid:0, partial:0 };
+    daily[d].total   += parseFloat(s.total_amount || 0);
+    daily[d].paid    += parseFloat(s.amount_paid  || 0);
+    daily[d].balance += parseFloat(s.balance_due  || 0);
+    daily[d].count++;
+    if (s.payment_status === 'Unpaid')  daily[d].unpaid++;
+    if (s.payment_status === 'Partial') daily[d].partial++;
+  });
+
+  let totalRevenue = 0, totalPaid = 0, totalBalance = 0, rows = '';
+  for (let [date, data] of Object.entries(daily).sort((a,b) => b[0].localeCompare(a[0]))) {
+    const balColour  = data.balance  > 0 ? 'color:#b91c1c; font-weight:700;' : 'color:#15803d;';
+    const unpaidHint = (data.unpaid + data.partial) > 0
+      ? `<small style="color:#b91c1c;font-size:0.72rem;display:block;">${data.unpaid} unpaid · ${data.partial} partial</small>` : '';
+    rows += `<tr>
+      <td>${date}</td>
+      <td>₦${data.total.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+      <td style="color:#15803d;font-weight:600;">₦${data.paid.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+      <td style="${balColour}">₦${data.balance.toLocaleString(undefined,{minimumFractionDigits:2})}${unpaidHint}</td>
+      <td>${data.count}</td>
+    </tr>`;
+    totalRevenue += data.total; totalPaid += data.paid; totalBalance += data.balance;
+  }
+  if (!rows) rows = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">No records found.</td></tr>';
+  rows += `<tr style="font-weight:700;background:#f0f7f4;">
+    <td>TOTAL</td>
+    <td>₦${totalRevenue.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+    <td style="color:#15803d;">₦${totalPaid.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+    <td style="${totalBalance > 0 ? 'color:#b91c1c;' : 'color:#15803d;'}">₦${totalBalance.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+    <td>${filtered.length}</td>
+  </tr>`;
+
+  const el = document.getElementById('financeTable');
+  if (el) el.innerHTML = rows;
+
+  const unpaidCount  = filtered.filter(s => s.payment_status === 'Unpaid').length;
+  const partialCount = filtered.filter(s => s.payment_status === 'Partial').length;
+  const statsEl = document.getElementById('financeStats');
+  if (statsEl) statsEl.innerHTML = `
+    <div class="stat-card">
+      <div><div class="stat-label">Total Revenue</div><div class="stat-val">₦${totalRevenue.toLocaleString(undefined,{minimumFractionDigits:2})}</div></div>
+      <i class="fas fa-chart-line fa-2x"></i>
+    </div>
+    <div class="stat-card">
+      <div><div class="stat-label">Collected (Paid)</div><div class="stat-val" style="color:var(--green);">₦${totalPaid.toLocaleString(undefined,{minimumFractionDigits:2})}</div></div>
+      <i class="fas fa-check-circle fa-2x" style="color:var(--green);"></i>
+    </div>
+    <div class="stat-card" style="${totalBalance > 0 ? 'border-color:#f87171;' : ''}">
+      <div><div class="stat-label">Outstanding Balance</div><div class="stat-val" style="${totalBalance > 0 ? 'color:#b91c1c;' : ''}">₦${totalBalance.toLocaleString(undefined,{minimumFractionDigits:2})}</div></div>
+      <i class="fas fa-exclamation-circle fa-2x" style="${totalBalance > 0 ? 'color:#b91c1c;' : ''}"></i>
+    </div>
+    <div class="stat-card" style="${unpaidCount > 0 ? 'border-color:#f87171;' : ''}">
+      <div><div class="stat-label">Unpaid Samples</div><div class="stat-val" style="${unpaidCount > 0 ? 'color:#b91c1c;' : ''}">${unpaidCount}</div></div>
+      <i class="fas fa-times-circle fa-2x" style="${unpaidCount > 0 ? 'color:#b91c1c;' : ''}"></i>
+    </div>
+    <div class="stat-card" style="${partialCount > 0 ? 'border-color:#fde68a;' : ''}">
+      <div><div class="stat-label">Partial Payments</div><div class="stat-val" style="${partialCount > 0 ? 'color:#b45309;' : ''}">${partialCount}</div></div>
+      <i class="fas fa-adjust fa-2x" style="${partialCount > 0 ? 'color:#b45309;' : ''}"></i>
+    </div>`;
+}
+
+function resetFinanceFilter() {
+  const s = document.getElementById('financeStart');
+  const e = document.getElementById('financeEnd');
+  if (s) s.value = '';
+  if (e) e.value = '';
+  renderFinanceReport();
+}
+
+async function exportFinanceCSV() {
+  let start = document.getElementById('financeStart')?.value;
+  let end   = document.getElementById('financeEnd')?.value;
+  let q = _db.from('samples')
+    .select('id,patient,collection_date,total_amount,amount_paid,balance_due,payment_status')
+    .order('collection_date',{ascending:false});
+  if (start) q = q.gte('collection_date', start);
+  if (end)   q = q.lte('collection_date', end);
+  const { data } = await q;
+  if (!data || !data.length) { alert('No data to export.'); return; }
+  let headers = ['Date','Sample ID','Patient','Total (NGN)','Paid (NGN)','Balance (NGN)','Payment Status'];
+  let rows = data.map(s => [
+    (s.collection_date||'').slice(0,10),
+    `A.B-${s.id}`,
+    s.patient || '',
+    (s.total_amount||0).toFixed(2),
+    (s.amount_paid||0).toFixed(2),
+    (s.balance_due||0).toFixed(2),
+    s.payment_status || 'Unpaid'
+  ]);
+  let csv = [headers,...rows].map(r => r.map(c => `"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  let a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = `finance_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
 
 // ========== PWA Service Worker ==========
 if ('serviceWorker' in navigator) {
@@ -977,12 +1103,13 @@ function _csvDate() {
     // "January 2024" never silently fetches the wrong rows.
     let samples = [];
     try {
+      // Read date filters first so cache check and DB query both use same values
+      const dateFrom = document.getElementById('analyticsDateFrom')?.value || '';
+      const dateTo   = document.getElementById('analyticsDateTo')?.value   || '';
+
       if (_analyticsCacheValid(dateFrom, dateTo)) {
         samples = _analyticsCache;
       } else {
-        // Read date filters now so they can be applied at DB level
-        const dateFrom = document.getElementById('analyticsDateFrom')?.value || '';
-        const dateTo   = document.getElementById('analyticsDateTo')?.value   || '';
 
         const PAGE = 1000;
         let page = 0, done = false;
@@ -1263,7 +1390,7 @@ function _csvDate() {
           const flag = isHigh ? '↑ HIGH' : isLow ? '↓ LOW' : 'Normal';
           const col  = isHigh ? '#b91c1c' : isLow ? '#2563eb' : '#15803d';
           return `<tr>
-            <td style="font-family:monospace;font-size:.75rem;">MU-${x.id}</td>
+            <td style="font-family:monospace;font-size:.75rem;">A.B-${x.id}</td>
             <td style="font-size:.78rem;">${esc(x.patient)}</td>
             <td style="font-size:.75rem;">${esc(x.gender)}, ${x.age}y</td>
             <td style="font-weight:700;color:${col};font-size:.78rem;">${x.val} <small>${flag}</small></td>
