@@ -28,8 +28,16 @@
         // Add global UI elements to the page
         addGlobalUI();
 
-        // Wait a tick for supabase client to initialize on the page
-        await new Promise(r => setTimeout(r, 200));
+        // Wait for supabase client to be available (retry up to 3s)
+        let clientReady = false;
+        for (let i = 0; i < 30; i++) {
+            if (getSupabaseClient()) { clientReady = true; break; }
+            await new Promise(r => setTimeout(r, 100));
+        }
+        if (!clientReady) {
+            console.warn('global.js: Supabase client not available after 3s — notifications skipped');
+            return;
+        }
 
         // Load announcements (does NOT play sound)
         await loadAnnouncements();
@@ -148,7 +156,7 @@
         searchWidget.innerHTML = `
             <div class="search-container">
                 <i class="fas fa-search" style="color:var(--muted);"></i>
-                <input type="text" id="globalSampleSearchInput" placeholder="Track sample by ID (e.g., MU-123)...">
+                <input type="text" id="globalSampleSearchInput" placeholder="Track sample by ID (e.g., A.B-123)...">
                 <button id="globalSampleSearchBtn"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="search-results-dropdown" id="searchResultsDropdown"></div>
@@ -239,7 +247,11 @@
                 .order('created_at', { ascending: false })
                 .limit(20);
 
-            if (error) throw error;
+            if (error) {
+                console.error('Announcements RLS/query error:', error.message);
+                renderAnnouncements([]);
+                return;
+            }
             renderAnnouncements(data || []);
 
             // Update unread count
@@ -339,7 +351,7 @@
         let debounceTimer;
 
         async function performSearch() {
-            let query = searchInput.value.trim().replace(/MU-?/i, '');
+            let query = searchInput.value.trim().replace(/^(A\.B-?|MU-?)/i, '');
             if (!query) {
                 dropdown.classList.remove('show');
                 return;
@@ -377,7 +389,7 @@
                     }
                     return `
                     <div class="search-result-item" onclick="viewSampleDetails(${s.id})">
-                        <div class="sample-id">MU-${s.id}</div>
+                        <div class="sample-id">A.B-${s.id}</div>
                         <div class="sample-patient">${escapeHtml(s.patient)}</div>
                         <div style="margin-top:3px;">${statusBadge}</div>
                         ${s.status === 'Rejected' && s.rejection_reason ? `<div style="font-size:0.68rem;color:#b91c1c;margin-top:2px;"><i class="fas fa-info-circle"></i> ${escapeHtml(s.rejection_reason)}</div>` : ''}
@@ -494,7 +506,7 @@
             modal.innerHTML = `
                 <div style="background:white; border-radius:20px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto; padding:20px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                        <h3 style="color:var(--primary);">Sample MU-${sampleId} Timeline</h3>
+                        <h3 style="color:var(--primary);">Sample A.B-${sampleId} Timeline</h3>
                         <button onclick="document.getElementById('timelineModal').style.display='none'" style="background:none; border:none; font-size:1.2rem; cursor:pointer;">✕</button>
                     </div>
                     <div id="timelineEventsList"></div>
