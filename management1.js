@@ -1323,7 +1323,7 @@ async function renderAllSamples() {
     let isOverdue = s.due && s.due < today && s.status !== 'Result Released' && s.status !== 'Rejected';
     let priCls = s.priority === 'STAT' ? 'badge-stat' : s.priority === 'Urgent' ? 'badge-urgent' : 'badge-routine';
     return `<tr>
-      <td style="font-family:monospace;">MU-${s.id}${s.offline_ref ? `<br><span style="font-size:0.6rem;background:#fff9ec;border:1px solid #fde68a;color:#92400e;padding:1px 5px;border-radius:5px;font-family:monospace;">${esc(s.offline_ref)}</span>` : ''}</td>
+      <td style="font-family:monospace;">A.B-${s.id}${s.offline_ref ? `<br><span style="font-size:0.6rem;background:#fff9ec;border:1px solid #fde68a;color:#92400e;padding:1px 5px;border-radius:5px;font-family:monospace;">${esc(s.offline_ref)}</span>` : ''}</td>
       <td><strong>${esc(s.patient)}</strong><br><small>${s.age ?? '?'}y ${esc(s.gender)}</small></td>
       <td><small>${s.tests.map(t => esc(t.test_name)).join('<br>')}</small></td>
       <td><small>${esc(s.stype || '')}</small></td>
@@ -1354,7 +1354,7 @@ async function togglePayment(id) {
   toast(`Payment: ${s.paystatus}`);
 }
 async function deleteSample(id) {
-  if (!confirm(`Permanently delete sample MU-${id}?`)) return;
+  if (!confirm(`Permanently delete sample A.B-${id}?`)) return;
   await deleteSampleFromServer(id);
   await addAudit('Deleted', id, 'Sample removed');
   await Promise.all([renderAllSamples(), renderDashboard(), renderVerifyTable()]);
@@ -1362,7 +1362,7 @@ async function deleteSample(id) {
 }
 function exportAllSamples() {
   let headers = ['ID','Patient','Age','Gender','Phone','Clinician','Tests','Sample Type','Collection Date','Due Date','Priority','Status','Payment Status','Total NGN','Paid NGN','Balance NGN'];
-  let rows = samples.map(s => [`MU-${s.id}`, s.patient, s.age || '', s.gender, s.phone || '', s.clinician || '', s.tests.map(t => t.test_name).join('; '), s.stype, s.collDate, s.due || '', s.priority, s.status, s.paystatus, (s.totalAmount||0).toFixed(2), (s.amountPaid||0).toFixed(2), (s.balanceDue||0).toFixed(2)]);
+  let rows = samples.map(s => [`A.B-${s.id}`, s.patient, s.age || '', s.gender, s.phone || '', s.clinician || '', s.tests.map(t => t.test_name).join('; '), s.stype, s.collDate, s.due || '', s.priority, s.status, s.paystatus, (s.totalAmount||0).toFixed(2), (s.amountPaid||0).toFixed(2), (s.balanceDue||0).toFixed(2)]);
   let csv = [headers, ...rows].map(r => r.map(c => `"${String(c ?? '').replace(/"/g,'""')}"`).join(',')).join('\n');
   let blob = new Blob([csv], { type:'text/csv' });
   let a = document.createElement('a'); a.href = URL.createObjectURL(blob);
@@ -1382,7 +1382,7 @@ async function renderDashboard() {
     <div class="stat-card" style="${overdue > 0 ? 'border-color:#f87171;' : ''}"><div><div class="stat-label">Overdue</div><div class="stat-val" style="${overdue > 0 ? 'color:var(--red-light);' : ''}">${overdue}</div></div><i class="fas fa-clock fa-2x"></i></div>`;
   let overdueSamples = samples.filter(s => s.status !== 'Result Released' && s.status !== 'Rejected' && s.due && s.due < new Date().toISOString().slice(0,10));
   document.getElementById('criticalList').innerHTML = '<p>No critical flags at this time.</p>';
-  document.getElementById('overdueList').innerHTML = overdueSamples.length ? overdueSamples.map(s => `<div><strong>MU-${s.id}</strong> ${esc(s.patient)} — Due: ${s.due}</div>`).join('') : '<p>No overdue samples.</p>';
+  document.getElementById('overdueList').innerHTML = overdueSamples.length ? overdueSamples.map(s => `<div><strong>A.B-${s.id}</strong> ${esc(s.patient)} — Due: ${s.due}</div>`).join('') : '<p>No overdue samples.</p>';
 }
 async function renderVerifyTable() {
   await loadSamples();
@@ -1404,7 +1404,7 @@ async function renderVerifyTable() {
     const releasedAt = isReleased && s.releasedAt ? new Date(s.releasedAt).toLocaleString() : (isReleased ? '—' : '');
     const actions = `<button class="btn btn-primary btn-sm" onclick="openVerifyModal(${s.id})"><i class="fas fa-eye"></i> Review</button>`;
     return `<tr style="${isReleased ? 'opacity:0.85;background:#f8fff9;' : ''}">
-      <td style="font-family:monospace;">MU-${s.id}${s.offline_ref ? `<br><span style="font-size:0.6rem;background:#fff9ec;border:1px solid #fde68a;color:#92400e;padding:1px 5px;border-radius:5px;font-family:monospace;">${esc(s.offline_ref)}</span>` : ''}</td>
+      <td style="font-family:monospace;">A.B-${s.id}${s.offline_ref ? `<br><span style="font-size:0.6rem;background:#fff9ec;border:1px solid #fde68a;color:#92400e;padding:1px 5px;border-radius:5px;font-family:monospace;">${esc(s.offline_ref)}</span>` : ''}</td>
       <td><strong>${esc(s.patient)}</strong><br><small>${s.age ?? '?'}y ${esc(s.gender)}</small></td>
       <td><small>${s.tests.map(t => esc(t.test_name)).join('<br>')}</small></td>
       <td><small>${s.tests.map(t => {
@@ -1526,7 +1526,7 @@ async function openVerifyModal(id) {
     <div style="background:#f0f7f4; border-radius:16px; padding:14px; margin-bottom:12px;">
       <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
         <div>
-          <span style="font-family:monospace; font-weight:700; font-size:1rem;">MU-${s.id}</span>
+          <span style="font-family:monospace; font-weight:700; font-size:1rem;">A.B-${s.id}</span>
           <span style="margin:0 8px; color:#9ca3af;">|</span>
           <strong>${esc(s.patient)}</strong>
           <span style="margin:0 6px; color:#9ca3af;">·</span>
@@ -1547,7 +1547,7 @@ async function openVerifyModal(id) {
     <div style="border:1px solid var(--border); border-radius:16px; overflow-x:auto; margin-bottom:16px; padding:8px;">${buildReportPreview(s)}</div>
     <div class="form-group"><label class="form-label">Supervisor Comment</label><textarea id="supervisorComment" rows="2" class="form-input" style="width:100%;"></textarea></div>`;
 
-  document.getElementById('verifyModalTitle').innerHTML = `Review — MU-${s.id} | ${esc(s.patient)}`;
+  document.getElementById('verifyModalTitle').innerHTML = `Review — A.B-${s.id} | ${esc(s.patient)}`;
   document.getElementById('verifyModalBody').innerHTML = html;
 
   // Disable release button immediately for unsettled payments
@@ -1566,7 +1566,7 @@ async function returnToTech() {
   await addAudit('Returned to Tech', s.id, comment);
   closeVerifyModal();
   await Promise.all([renderVerifyTable(), renderAllSamples()]);
-  toast(`MU-${s.id} returned to technologist`);
+  toast(`A.B-${s.id} returned to technologist`);
 }
 async function releaseResults() {
   if (!currentVerifySample) { toast('No sample selected', 'error'); return; }
@@ -1614,7 +1614,7 @@ async function releaseResults() {
   }
   closeVerifyModal();
   await Promise.all([renderVerifyTable(), renderAllSamples(), renderDashboard()]);
-  toast(`MU-${s.id} released ✓${rejectedCount ? ` (${rejectedCount} test(s) pending recollection)` : ''}${s._payOverrideReason ? ' — balance still outstanding' : ''}`);
+  toast(`A.B-${s.id} released ✓${rejectedCount ? ` (${rejectedCount} test(s) pending recollection)` : ''}${s._payOverrideReason ? ' — balance still outstanding' : ''}`);
 
   if (typeof window._analyticsInvalidateCache === 'function') {
     window._analyticsInvalidateCache();
@@ -1628,7 +1628,7 @@ async function renderAudit() {
     <td>${new Date(e.ts).toLocaleString()}</td>
     <td>${esc(e.user_name)} (${esc(e.user_role)})</td>
     <td><strong>${esc(e.action)}</strong></td>
-    <td>${e.sample_id ? `MU-${e.sample_id}` : '—'}</td>
+    <td>${e.sample_id ? `A.B-${e.sample_id}` : '—'}</td>
     <td><small>${esc(e.details || '')}</small></td>
   </tr>`).join('');
 }
@@ -1712,7 +1712,7 @@ function resetFinanceFilter() {
 function exportFinanceCSV() {
   let headers = ['Date','Sample ID','Patient','Age','Gender','Tests','Total (NGN)','Paid (NGN)','Balance (NGN)','Payment Status','Pay Mode','Receipt No','Sample Status'];
   let rows = samples.map(s => [
-    s.collDate || '', `MU-${s.id}`, s.patient, s.age || '', s.gender,
+    s.collDate || '', `A.B-${s.id}`, s.patient, s.age || '', s.gender,
     s.tests.map(t => t.test_name).join('; '),
     (s.totalAmount||0).toFixed(2), (s.amountPaid||0).toFixed(2), (s.balanceDue||0).toFixed(2),
     s.paystatus || 'Unpaid', s.paymode || '', s.receiptNo || '', s.status
@@ -1768,7 +1768,7 @@ async function generatePDF(id) {
       <p style="font-size:11px;">Accredited Laboratory · ISO 15189</p>
     </div>
     <div style="margin-bottom:16px;">
-      <p><strong>Sample ID:</strong> MU-${s.id}</p>
+      <p><strong>Sample ID:</strong> A.B-${s.id}</p>
       <p><strong>Patient:</strong> ${esc(s.patient)} (${s.age ?? '?'}y, ${esc(s.gender)})</p>
       <p><strong>Collected:</strong> ${s.collection_date} | <strong>Released:</strong> ${s.released_at ? new Date(s.released_at).toLocaleString() : '—'}</p>
       <p><strong>Payment:</strong> ${s.pay_status} | Paid: ${(s.amount_paid || 0).toFixed(2)} NGN | Balance: ${(s.balance_due || 0).toFixed(2)} NGN</p>

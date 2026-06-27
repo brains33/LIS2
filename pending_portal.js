@@ -253,7 +253,7 @@ function filterTable() {
               onmouseover="this.style.background='#f8fafb'" onmouseout="this.style.background=''"
               onclick="expandResult(${s.id})">
       <td style="padding:10px 14px;">
-        <span style="font-family:monospace; font-weight:700; color:var(--primary);">MU-${s.id}</span>
+        <span style="font-family:monospace; font-weight:700; color:var(--primary);">A.B-${s.id}</span>
         ${s.receipt_no ? `<br><span style="font-family:monospace; font-size:0.62rem; color:#1d4ed8; background:#eff6ff; border:1px solid #bfdbfe; border-radius:4px; padding:1px 5px; display:inline-block; margin-top:2px;" title="Receipt / RCP number — use this to search"><i class="fas fa-receipt" style="margin-right:2px;font-size:0.6rem;"></i>${esc(s.receipt_no)}</span>` : ''}
         ${s.offline_ref ? `<br><span style="font-family:monospace; font-size:0.62rem; color:#92400e; background:#fff9ec; border:1px solid #fde68a; border-radius:4px; padding:1px 5px; display:inline-block; margin-top:2px;" title="Offline Draft Ref"><i class="fas fa-link" style="margin-right:2px;font-size:0.6rem;"></i>${esc(s.offline_ref)}</span>` : ''}
        </td>
@@ -300,7 +300,7 @@ function expandResult(id) {
   detail.innerHTML = `
     <div class="card" style="margin-top:0; border-top:3px solid var(--primary);">
       <div class="card-header" style="justify-content:space-between;">
-        <span><i class="fas fa-microscope"></i> Result Detail — MU-${s.id} · ${esc(s.patient)}</span>
+        <span><i class="fas fa-microscope"></i> Result Detail — A.B-${s.id} · ${esc(s.patient)}</span>
         <button class="btn btn-secondary btn-sm" onclick="closeDetail()"><i class="fas fa-times"></i> Close</button>
       </div>
       <div class="card-body">
@@ -1028,7 +1028,7 @@ function buildResultCard(s) {
     <div class="result-block">
       <div class="result-block-head">
         <div>
-          <div style="font-weight:700;">MU-${s.id} — ${esc(s.patient)}</div>
+          <div style="font-weight:700;">A.B-${s.id} — ${esc(s.patient)}</div>
           <div style="font-size:0.8rem; color:var(--text2); margin-top:2px;">
             ${s.age ?? '?'}y ${esc(s.gender)}
             &nbsp;|&nbsp; Collected: ${s.collection_date}
@@ -1543,7 +1543,7 @@ async function generatePDF(id) {
       pdf.line(ML, PH - 10, PW - MR, PH - 10);
       pdf.setFontSize(7);
       pdf.setTextColor(...GRAY);
-      pdf.text("Powered by MU'UJIZA DATA: Laboratory Information System.", ML, PH - 6);
+      pdf.text("Powered by A.B DAWANAU MEDICAL LABORATORY SERVICES.", ML, PH - 6);
       pdf.text(`Page ${p} of ${total}`, PW - MR, PH - 6, { align: 'right' });
     }
   }
@@ -1565,7 +1565,7 @@ async function generatePDF(id) {
     .join('  |  ');
 
   const infoLines = [
-    [`Sample ID: MU-${s.id}${s.offline_ref ? '  [Draft Ref: ' + s.offline_ref + ']' : ''}`,
+    [`Sample ID: A.B-${s.id}${s.offline_ref ? '  [Draft Ref: ' + s.offline_ref + ']' : ''}`,
      `Collected: ${s.collection_date || '—'}`],
     [`Patient: ${s.patient || '—'}  (${s.age ?? '?'}y, ${s.gender || '—'})`,
      `Released: ${s.released_at ? new Date(s.released_at).toLocaleString() : '—'}`],
@@ -1815,7 +1815,7 @@ async function generatePDF(id) {
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(10);
       pdf.setTextColor(255,255,255);
-      pdf.text("MU'UJIZA LIS", PW / 2, 7, { align: 'center' });
+      pdf.text("A.B DAWANAU MEDICAL LABORATORY SERVICES", PW / 2, 7, { align: 'center' });
       pdf.setFontSize(8);
       pdf.text('MARKET STREET, 3RD AVENUE, GWARINPA  |  Phone No. 08160040909', PW / 2, 13, { align: 'center' });
     }
@@ -3422,7 +3422,7 @@ function renderRejectedTable(groups) {
       <div style="border:1.5px solid #fca5a5; border-radius:14px; padding:16px; margin-bottom:14px; background:#fff;">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
           <div>
-            <span style="font-family:monospace; font-weight:700; font-size:1rem; color:var(--primary);">MU-${s.id}</span>
+            <span style="font-family:monospace; font-weight:700; font-size:1rem; color:var(--primary);">A.B-${s.id}</span>
             <span style="font-weight:600; margin-left:10px;">${esc(s.patient || '—')}</span>
             <span style="color:var(--text2); font-size:0.82rem; margin-left:8px;">${s.age ?? '?'}y ${esc(s.gender || '')}</span>
           </div>
