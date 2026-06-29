@@ -1521,22 +1521,7 @@ async function generatePDF(id) {
       pdf.text("AB DAWANAU MEDICAL LABORATORY SERVICES", PW / 2, 7, { align: 'center' });
       pdf.setFontSize(8);
       pdf.text('MARKET STREET, 3RD AVENUE, GWARINPA  |  Phone No. 08160040909', PW / 2, 13, { align: 'center' });
-      // Niger State logo left side
-      pdf.setFillColor(0, 153, 204);
-      pdf.rect(2, 1, 16, 18, 'F');
-      pdf.setFontSize(5);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor(255,255,255);
-      pdf.text('NIGER', 10, 9, { align: 'center' });
-      pdf.text('STATE', 10, 15, { align: 'center' });
-      // Microscope/MLS logo right side
-      pdf.setFillColor(31, 110, 67);
-      pdf.rect(PW - 18, 1, 16, 18, 'F');
-      pdf.setFontSize(5);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor(255,255,255);
-      pdf.text('MED.', PW - 10, 10, { align: 'center' });
-      pdf.text('LAB.', PW - 10, 16, { align: 'center' });
+
       // footer
       pdf.setDrawColor(...GREEN);
       pdf.setLineWidth(0.3);
