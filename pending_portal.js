@@ -1189,9 +1189,11 @@ function buildParamTable(testName, data, testType, age, gender) {
       { organism: 'Salmonella Paratyphi C', o: data.co ?? '—', h: data.ch ?? '—' }
     ];
     let tableRows = '';
+    let anySignificant = false;
     for (let r of rows) {
-      const oFlag    = (parseInt(r.o) >= 160) ? ' ↑' : '';
-      const hFlag    = (parseInt(r.h) >= 160) ? ' ↑' : '';
+      const oFlag    = (parseInt(r.o) >= 80) ? ' ↑' : '';
+      const hFlag    = (parseInt(r.h) >= 80) ? ' ↑' : '';
+      if (oFlag || hFlag) anySignificant = true;
       const oDisplay = r.o !== '—' ? `1:${r.o}${oFlag}` : '—';
       const hDisplay = r.h !== '—' ? `1:${r.h}${hFlag}` : '—';
       const oColour  = oFlag ? '#b91c1c' : 'inherit';
@@ -1207,7 +1209,8 @@ function buildParamTable(testName, data, testType, age, gender) {
         <colgroup><col style="width:45%;"><col style="width:27.5%;"><col style="width:27.5%;"></colgroup>
         <thead><tr><th style="text-align:left; padding:8px 10px;">Organism</th><th style="text-align:center; padding:8px 10px;">O Antigen (TO)</th><th style="text-align:center; padding:8px 10px;">H Antigen (TH)</th></tr></thead>
         <tbody>${tableRows}</tbody>
-      </table>`;
+      </table>
+      ${anySignificant ? `<div style="margin-top:8px; padding:8px 12px; background:#fff7ed; border:1px solid #fde8e8; border-radius:8px; font-size:0.78rem; color:#92400e;"><i class="fas fa-info-circle"></i> Titres of ≥1:80 for O and/or H antigens are considered the threshold of significance.</div>` : ''}`;
   }
 
   // Malaria
@@ -3016,9 +3019,11 @@ function collectAutoTableRows(body, testName, data, testType, age, gender) {
       { org: 'S. Paratyphi B', o: data.bo, h: data.bh },
       { org: 'S. Paratyphi C', o: data.co, h: data.ch }
     ];
+    let widalSignificant = false;
     widalRows.forEach(r => {
-      const oFlag = parseInt(r.o) >= 160 ? ' ↑' : '';
-      const hFlag = parseInt(r.h) >= 160 ? ' ↑' : '';
+      const oFlag = parseInt(r.o) >= 80 ? ' ↑' : '';
+      const hFlag = parseInt(r.h) >= 80 ? ' ↑' : '';
+      if (oFlag || hFlag) widalSignificant = true;
       const oTxt = r.o !== undefined && r.o !== null ? `1:${r.o}${oFlag}` : '—';
       const hTxt = r.h !== undefined && r.h !== null ? `1:${r.h}${hFlag}` : '—';
       body.push([
@@ -3028,6 +3033,13 @@ function collectAutoTableRows(body, testName, data, testType, age, gender) {
         ''
       ]);
     });
+    if (widalSignificant) {
+      body.push([{
+        content: 'Titres of ≥1:80 for O and/or H antigens are considered the threshold of significance.',
+        colSpan: 4,
+        styles: { fillColor: [255, 247, 237], textColor: [146, 64, 14], fontStyle: 'italic', fontSize: 8 }
+      }]);
+    }
     return;
   }
 

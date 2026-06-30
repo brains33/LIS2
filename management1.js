@@ -1176,16 +1176,18 @@ function buildReportPreview(s) {
             { organism: 'Salmonella Paratyphi C',  o: d.co ?? '—', h: d.ch ?? '—' }
           ];
           let widalRows = '';
+          let widalSignificant = false;
           for (let r of widalEntries) {
-            const oFlag = parseInt(r.o) >= 160 ? ' ↑' : '';
-            const hFlag = parseInt(r.h) >= 160 ? ' ↑' : '';
+            const oFlag = parseInt(r.o) >= 80 ? ' ↑' : '';
+            const hFlag = parseInt(r.h) >= 80 ? ' ↑' : '';
+            if (oFlag || hFlag) widalSignificant = true;
             const oDisplay = r.o !== '—' ? `1:${r.o}${oFlag}` : '—';
             const hDisplay = r.h !== '—' ? `1:${r.h}${hFlag}` : '—';
             widalRows += `<tr><td style="padding:6px 12px;">${r.organism}</td>
                              <td style="padding:6px 12px; ${oFlag ? 'font-weight:700;color:#dc2626;' : ''}">${oDisplay}</td>
                              <td style="padding:6px 12px; ${hFlag ? 'font-weight:700;color:#dc2626;' : ''}">${hDisplay}</td></tr>`;
           }
-          rows += `<tr><td colspan="4"><table style="width:100%; border-collapse:collapse;"><thead><tr><th>Organism</th><th>O Antigen (TO)</th><th>H Antigen (TH)</th></tr></thead><tbody>${widalRows}</tbody></table></td></tr>`;
+          rows += `<tr><td colspan="4"><table style="width:100%; border-collapse:collapse;"><thead><tr><th>Organism</th><th>O Antigen (TO)</th><th>H Antigen (TH)</th></tr></thead><tbody>${widalRows}</tbody></table>${widalSignificant ? '<div style="margin-top:6px;padding:6px 10px;background:#fff7ed;border:1px solid #fde8e8;border-radius:6px;font-size:0.75rem;color:#92400e;">Titres of ≥1:80 for O and/or H antigens are considered the threshold of significance.</div>' : ''}</td></tr>`;
         } else if (testType === 'complex_culture' || testType === 'complex_stool_cs') {
           let organism = d.organism || 'Not specified';
           rows += `<tr style="background:#f0f7f4;"><td colspan="4" style="padding:8px 12px;"><strong>Organism:</strong> <span style="font-style:italic;">${esc(organism)}</span></td></tr>`;

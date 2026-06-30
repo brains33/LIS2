@@ -366,6 +366,25 @@ const CBC_PARAMS = [
   {key:'mono',         name:'Monocytes',             unit:'%',          low:2,    high:10}
 ];
 const WIDAL_TITERS = [20, 40, 80, 160, 320, 640, 1280];
+
+function updateWidalInterp(idx) {
+  const keys = ['o','h','ao','ah','bo','bh','co','ch'];
+  let anySignificant = false;
+  keys.forEach(k => {
+    const el = document.getElementById(`widal_${idx}_${k}`);
+    const v = parseInt(el?.value);
+    if (!isNaN(v) && v >= 80) anySignificant = true;
+  });
+  const box = document.getElementById(`widalInterp_${idx}`);
+  if (!box) return;
+  if (anySignificant) {
+    box.className = 'interp-box interp-abnormal';
+    box.innerHTML = '⚠ Titres of ≥1:80 for O and/or H antigens are considered the threshold of significance.';
+  } else {
+    box.className = 'interp-box interp-normal';
+    box.textContent = '—';
+  }
+}
 // ========== KONTAGORA GH CLINICAL CHEMISTRY PANELS ==========
 // Panel 1 — E/U/Cr (Electrolytes, Urea, Creatinine)
 const EUCR_PARAMS = [
@@ -1075,12 +1094,12 @@ async function openResultModal(id) {
                 <tr style="border-top:1px solid #e2edf2; background:${ri % 2 === 1 ? '#f7faf9' : 'white'};">
                   <td style="padding:10px 14px; font-style:italic; font-weight:500; color:#1a2c3e; border-right:1px solid #e2edf2; white-space:nowrap;">${org.label}</td>
                   <td style="padding:8px 14px; text-align:center; border-right:1px solid #e2edf2;">
-                    <select id="widal_${idx}_${org.oKey}" style="padding:6px 10px; border-radius:10px; border:1.5px solid #e2edf2; font-size:0.85rem; background:white; min-width:130px;">
+                    <select id="widal_${idx}_${org.oKey}" onchange="updateWidalInterp(${idx})" style="padding:6px 10px; border-radius:10px; border:1.5px solid #e2edf2; font-size:0.85rem; background:white; min-width:130px;">
                       ${buildTiterOpts(org.oKey)}
                     </select>
                   </td>
                   <td style="padding:8px 14px; text-align:center;">
-                    <select id="widal_${idx}_${org.hKey}" style="padding:6px 10px; border-radius:10px; border:1.5px solid #e2edf2; font-size:0.85rem; background:white; min-width:130px;">
+                    <select id="widal_${idx}_${org.hKey}" onchange="updateWidalInterp(${idx})" style="padding:6px 10px; border-radius:10px; border:1.5px solid #e2edf2; font-size:0.85rem; background:white; min-width:130px;">
                       ${buildTiterOpts(org.hKey)}
                     </select>
                   </td>
@@ -1089,8 +1108,9 @@ async function openResultModal(id) {
             </tbody>
           </table>
         </div>
-        <div style="margin-top:7px; font-size:0.72rem; color:var(--text2);">⚠ Titres ≥ 1:160 are significant. Select "— (not done)" if that antigen was not tested.</div>
+        <div style="margin-top:7px; font-size:0.72rem; color:var(--text2);">⚠ Titres ≥ 1:80 are significant. Select "— (not done)" if that antigen was not tested.</div>
         <div id="widalInterp_${idx}" class="interp-box interp-normal" style="margin-top:8px;">—</div>`;
+      setTimeout(() => updateWidalInterp(idx), 0);
     }
     else if (testType === 'complex_lft') {
       let data = {};
