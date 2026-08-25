@@ -371,6 +371,7 @@
       if (btn.dataset.tab === 'tracking') renderTrackingTable();
       if (btn.dataset.tab === 'analytics') window.renderAnalytics();
       if (btn.dataset.tab === 'finance') renderFinanceReport();
+    if (btn.dataset.tab === 'subscription') loadSubscriptionStatus();
     });
   });
 
@@ -552,6 +553,272 @@ function _csvDate() {
   const d = new Date();
   const pad = n => String(n).padStart(2,'0');
   return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// §  SUBSCRIPTION MANAGEMENT (LIS-SUBS)
+//    Talks to the "lis-subs" Supabase Edge Function (Paystack-backed).
+//    ⚠ Update the slug below if your deployed function name differs.
+// ═══════════════════════════════════════════════════════════════════════════
+const SUBS_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/lis-subs`;
+
+// Fallback only — the edge function's PLAN_PRICES is the real source of truth.
+// loadSubsPlanPrices() overwrites this with the live values on first use, so a
+// stale fallback here only risks a wrong displayed price, never an underpayment
+// (the edge function re-validates the actual amount Paystack reports as paid).
+let PLAN_PRICES = { monthly: 5000, yearly: 60000 };
+const PLAN_DAYS = { monthly: 30, yearly: 365 };
+
+let PAYSTACK_PUBLIC_KEY = null;
+let _subsPricesLoaded = false;
+let _selectedPlan = null;
+
+function _subEsc(str) {
+  return (str || '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function loadSubsPlanPrices() {
+  if (_subsPricesLoaded) return PLAN_PRICES;
+  try {
+    const resp = await fetch(SUBS_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'get-plan-prices' })
+    });
+    const cfg = await resp.json();
+    if (cfg?.prices?.monthly && cfg?.prices?.yearly) PLAN_PRICES = cfg.prices;
+  } catch (err) {
+    console.warn('Could not load live plan prices, using fallback', err);
+  }
+  _subsPricesLoaded = true;
+  document.getElementById('planMonthlyPrice').innerText = `₦${PLAN_PRICES.monthly.toLocaleString()}`;
+  document.getElementById('planYearlyPrice').innerText  = `₦${PLAN_PRICES.yearly.toLocaleString()}`;
+  return PLAN_PRICES;
+}
+
+async function fetchSubPublicConfig() {
+  if (PAYSTACK_PUBLIC_KEY) return; // already loaded
+  try {
+    const resp = await fetch(SUBS_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'get-public-config' })
+    });
+    if (!resp.ok) throw new Error('Failed to load config');
+    const config = await resp.json();
+    PAYSTACK_PUBLIC_KEY = config.paystackPublicKey;
+  } catch (err) {
+    console.error('Config fetch error:', err);
+    throw new Error('Payment configuration unavailable. Please try again.');
+  }
+}
+
+async function selectPlan(plan) {
+  await loadSubsPlanPrices();
+  _selectedPlan = plan;
+
+  document.getElementById('planMonthly').style.borderColor = plan === 'monthly' ? 'var(--green)' : 'var(--border)';
+  document.getElementById('planYearly').style.borderColor  = plan === 'yearly'  ? 'var(--green)' : 'var(--border)';
+  document.getElementById('planMonthly').style.background  = plan === 'monthly' ? '#f0fdf4' : '';
+  document.getElementById('planYearly').style.background   = plan === 'yearly'  ? '#f0fdf4' : '';
+
+  document.getElementById('subEmailRow').style.display = 'block';
+  document.getElementById('subPayBtn').style.display   = 'block';
+  document.getElementById('subPayBtn').innerText =
+    `💳 Pay ₦${PLAN_PRICES[plan].toLocaleString()} — ${plan.charAt(0).toUpperCase()+plan.slice(1)}`;
+}
+
+async function loadSubscriptionStatus() {
+  await loadSubsPlanPrices();
+  try {
+    const { data, error } = await window._supabaseClient
+      .from('admins')
+      .select('username, subscription_expires, subscription_plan, subscription_ref')
+      .eq('role', 'admin')
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    const expiry   = data?.subscription_expires ? new Date(data.subscription_expires) : null;
+    const today    = new Date();
+    today.setHours(0,0,0,0);
+    const daysLeft = expiry ? Math.ceil((expiry - today) / (1000*60*60*24)) : null;
+    const plan     = data?.subscription_plan || 'monthly';
+
+    document.getElementById('subPlanVal').innerText   = plan.charAt(0).toUpperCase()+plan.slice(1);
+    document.getElementById('subExpiryVal').innerText = expiry ? expiry.toLocaleDateString('en-GB') : 'Not set';
+    document.getElementById('subDaysVal').innerText   = daysLeft !== null ? daysLeft + ' days' : '—';
+
+    const statusCard = document.getElementById('subStatusCard');
+    const statusVal  = document.getElementById('subStatusVal');
+    const banner     = document.getElementById('subAlertBanner');
+
+    if (!expiry || daysLeft < 0) {
+      statusVal.innerText = '🔴 EXPIRED';
+      statusVal.style.color = 'var(--red)';
+      statusCard.style.borderColor = 'var(--red)';
+      banner.style.display = 'block';
+      banner.style.background = '#fee2e2';
+      banner.style.color = '#b91c1c';
+      banner.innerText = '⚠️ Your subscription has expired. Please renew to restore full access.';
+    } else if (daysLeft <= 7) {
+      statusVal.innerText = '🟡 EXPIRING SOON';
+      statusVal.style.color = '#b45309';
+      statusCard.style.borderColor = '#f59e0b';
+      banner.style.display = 'block';
+      banner.style.background = '#fffbeb';
+      banner.style.color = '#92400e';
+      banner.innerText = `⚠️ Your subscription expires in ${daysLeft} day(s). Renew now to avoid interruption.`;
+    } else {
+      statusVal.innerText = '🟢 ACTIVE';
+      statusVal.style.color = 'var(--green)';
+      statusCard.style.borderColor = 'var(--border)';
+      banner.style.display = 'none';
+    }
+
+    await loadPaymentHistory();
+
+  } catch (err) {
+    console.error('Subscription load error:', err);
+    document.getElementById('subStatusVal').innerText = 'Error loading';
+  }
+}
+
+async function loadPaymentHistory() {
+  try {
+    const { data, error } = await window._supabaseClient
+      .from('subscription_payments')
+      .select('*')
+      .order('paid_at', { ascending: false })
+      .limit(10);
+
+    const el = document.getElementById('subHistoryTable');
+
+    if (error || !data || !data.length) {
+      el.innerHTML = '<p style="color:var(--muted);font-size:.85rem;">No payment records yet.</p>';
+      return;
+    }
+
+    const rows = data.map(p => `
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 4px; font-size:.82rem;">${new Date(p.paid_at).toLocaleDateString('en-GB')}</td>
+        <td style="padding:8px 4px; font-size:.82rem; text-transform:capitalize;">${_subEsc(p.plan)}</td>
+        <td style="padding:8px 4px; font-size:.82rem; color:var(--green); font-weight:600;">₦${Number(p.amount_ngn).toLocaleString()}</td>
+        <td style="padding:8px 4px; font-size:.75rem; color:var(--muted);">${_subEsc(p.reference)}</td>
+      </tr>`).join('');
+
+    el.innerHTML = `<table style="width:100%; border-collapse:collapse;">
+      <thead><tr style="color:var(--muted); font-size:.75rem; text-align:left;">
+        <th style="padding:6px 4px;">Date</th>
+        <th style="padding:6px 4px;">Plan</th>
+        <th style="padding:6px 4px;">Amount</th>
+        <th style="padding:6px 4px;">Reference</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+  } catch (_) {
+    document.getElementById('subHistoryTable').innerHTML =
+      '<p style="color:var(--muted);font-size:.85rem;">Could not load history.</p>';
+  }
+}
+
+async function initiateSubscriptionPayment() {
+  if (!_selectedPlan) { alert('Please select a plan first.'); return; }
+
+  const email = document.getElementById('subEmail').value.trim();
+  if (!email || !email.includes('@')) { alert('Please enter a valid email address.'); return; }
+
+  if (typeof PaystackPop === 'undefined') {
+    alert('Payment system not loaded. Please refresh the page.');
+    return;
+  }
+
+  try {
+    await fetchSubPublicConfig();
+  } catch (err) {
+    alert(err.message);
+    return;
+  }
+
+  const amount    = PLAN_PRICES[_selectedPlan];
+  const reference = `LIS-SUB-${_selectedPlan.toUpperCase()}-${Date.now()}`;
+
+  const btn = document.getElementById('subPayBtn');
+  btn.disabled = true;
+  btn.innerText = '⏳ Opening payment...';
+
+  try {
+    const handler = PaystackPop.setup({
+      key:      PAYSTACK_PUBLIC_KEY,
+      email:    email,
+      amount:   amount * 100, // kobo
+      currency: 'NGN',
+      ref:      reference,
+      metadata: {
+        plan:       _selectedPlan,
+        days:       PLAN_DAYS[_selectedPlan],
+        amount_ngn: amount,
+      },
+      callback: function(response) {
+        // Paystack callback must be sync — call async verify internally
+        btn.innerText = '⏳ Verifying payment...';
+        verifySubscriptionPayment(response.reference, _selectedPlan, amount, email)
+          .then(function() {
+            btn.disabled = false;
+            btn.innerText = `💳 Pay ₦${amount.toLocaleString()} — ${_selectedPlan}`;
+          })
+          .catch(function() {
+            btn.disabled = false;
+            btn.innerText = `💳 Pay ₦${amount.toLocaleString()} — ${_selectedPlan}`;
+          });
+      },
+      onClose: function() {
+        btn.disabled = false;
+        btn.innerText = `💳 Pay ₦${amount.toLocaleString()} — ${_selectedPlan}`;
+      }
+    });
+    handler.openIframe();
+  } catch (err) {
+    btn.disabled = false;
+    btn.innerText = `💳 Pay ₦${amount.toLocaleString()} — ${_selectedPlan}`;
+    alert('Payment error: ' + err.message);
+  }
+}
+
+async function verifySubscriptionPayment(reference, plan, amount, email) {
+  try {
+    const resp = await fetch(SUBS_FUNCTION_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-lis-token': (() => {
+          try {
+            const s = sessionStorage.getItem('muujiza_session');
+            return s ? JSON.parse(s).token : '';
+          } catch { return ''; }
+        })()
+      },
+      body: JSON.stringify({ action: 'verify-subscription', reference, plan, amount, email })
+    });
+    const result = await resp.json();
+    if (!resp.ok || !result.success) throw new Error(result.error || 'Verification failed');
+
+    const banner = document.getElementById('subAlertBanner');
+    banner.style.display = 'block';
+    banner.style.background = '#f0fdf4';
+    banner.style.color = '#15803d';
+    banner.innerText = `✅ Payment verified! Subscription extended by ${PLAN_DAYS[plan]} days.`;
+
+    await loadSubscriptionStatus();
+
+  } catch (err) {
+    const banner = document.getElementById('subAlertBanner');
+    banner.style.display = 'block';
+    banner.style.background = '#fee2e2';
+    banner.style.color = '#b91c1c';
+    banner.innerText = '❌ ' + err.message + '. Contact support if payment was deducted.';
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
