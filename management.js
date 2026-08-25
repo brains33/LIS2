@@ -927,7 +927,7 @@ async function verifySubscriptionPayment(reference, plan, amount, email) {
         return isMale ? {low:13.5, high:17.5, unit:'g/dL'} : {low:12.0, high:15.5, unit:'g/dL'};
       case 'ESR': case 'Erythrocyte Sedimentation Rate':
         return isMale ? {low:0, high:10, unit:'mm/hr'} : {low:0, high:20, unit:'mm/hr'};
-      case 'RBS': case 'Random Blood Sugar':  return {low:70, high:140, unit:'mg/dL'};
+      case 'RBS': case 'Random Blood Sugar':  return {low:4.7, high:7.8, unit:'mmol/l'};
       case 'FBS': case 'Fasting Blood Sugar': return {low:70, high:100, unit:'mg/dL'};
       default: return null;
     }
@@ -1048,7 +1048,7 @@ async function verifySubscriptionPayment(reference, plan, amount, email) {
     // NEW — matches pending_portal.js DIABETES_PARAMS exactly
     complex_diabetes: [
       {key:'fbs',   name:'FBS (Fasting Blood Sugar)',   unit:'mmol/L', low:3.0, high:6.0},
-      {key:'rbs',   name:'RBS (Random Blood Sugar)',     unit:'mmol/L', low:3.0, high:9.0},
+      {key:'rbs',   name:'RBS (Random Blood Sugar)',     unit:'mmol/L', low:4.7, high:7.8},
       {key:'hpp2',  name:'2HPP (2-Hour Post-Prandial)', unit:'mmol/L', low:3.0, high:9.0},
       {key:'ogtt',  name:'OGTT',                         unit:'mmol/L', low:3.0, high:7.8},
       {key:'hba1c', name:'HbA1c',                        unit:'%',      low:3.0, high:6.0},

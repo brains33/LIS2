@@ -109,7 +109,7 @@ function getReferenceRange(testName, age, gender) {
       return { low: 0, high: 15, unit: 'mm/hr' };
     case 'RBS':
     case 'Random Blood Sugar':
-      return { low: 6.0, high: 9.0, unit: 'mmol/L' };
+      return { low: 4.7, high: 7.8, unit: 'mmol/L' };
     case 'FBS':
     case 'Fasting Blood Sugar':
       return { low: 3.0, high: 6.0, unit: 'mmol/L' };
@@ -408,7 +408,7 @@ const PSA_PARAMS = [
 ];
 const DIABETES_PARAMS = [
   {key:'fbs',   name:'FBS (Fasting Blood Sugar)',    unit:'mmol/L', low:3.0, high:6.0},
-  {key:'rbs',   name:'RBS (Random Blood Sugar)',      unit:'mmol/L', low:3.0, high:9.0},
+  {key:'rbs',   name:'RBS (Random Blood Sugar)',      unit:'mmol/L', low:4.7, high:7.8},
   {key:'hpp2',  name:'2HPP (2-Hour Post-Prandial)',  unit:'mmol/L', low:3.0, high:9.0},
   {key:'ogtt',  name:'OGTT',                          unit:'mmol/L', low:3.0, high:7.8},
   {key:'hba1c', name:'HbA1c',                         unit:'%',      low:3.0, high:6.0}
