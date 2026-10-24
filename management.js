@@ -634,7 +634,7 @@ async function loadSubscriptionStatus() {
     const { data, error } = await window._supabaseClient
       .from('admins')
       .select('username, subscription_expires, subscription_plan, subscription_ref')
-      .eq('role', 'admin')
+      .order('subscription_expires', { ascending: false, nullsFirst: false })
       .limit(1)
       .maybeSingle();
 
